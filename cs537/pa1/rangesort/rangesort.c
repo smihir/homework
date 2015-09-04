@@ -8,6 +8,7 @@
 #include <string.h>
 #include "sort.h"
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <errno.h>
 
 void
@@ -40,7 +41,7 @@ main(int argc, char *argv[])
     opterr = 0;
     struct stat fs;
     rec_t *r;
-    char *fp;
+    char *fp, *dst;
 	int rc, j, set = 0;
     unsigned int i;
     unsigned int highval = 0, lowval = 1;
@@ -118,17 +119,31 @@ main(int argc, char *argv[])
 
     printf("low %u, high %u\n", lowindex, highindex);
     // open and create output file
-    fd = open(outFile, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU);
+    fd = open(outFile, O_RDWR|O_CREAT|O_TRUNC, S_IRWXU);
     if (fd < 0) {
 	perror("open");
 	exit(1);
     }
+
+    if (ftruncate(fd, (highindex-lowindex)*sizeof(rec_t)) == -1) {
+	perror("truncate");
+	exit(1);
+    }
+#if 0
 	rc = write(fd, fp + lowindex*sizeof(rec_t), (highindex-lowindex)*sizeof(rec_t));
 	if (rc != (highindex - lowindex)*sizeof(rec_t)) {
 	    perror("write");
 	    exit(1);
 	    // should probably remove file here but ...
 	}
+#endif
+/* mmap the output file */
+    if ((dst = mmap (0, (highindex-lowindex)*sizeof(rec_t), PROT_READ | PROT_WRITE,
+    MAP_SHARED, fd, 0)) == MAP_FAILED)
+        perror("mmap error for output");
+
+    memcpy (dst, fp + lowindex*sizeof(rec_t), (highindex-lowindex)*sizeof(rec_t));
+
     close(fd);
 
     free(fp);
