@@ -41,9 +41,15 @@ main(int argc, char *argv[])
     struct stat fs;
     rec_t *r;
     char *fp;
-	int rc, i, j;
+	int rc, j, set = 0;
+    unsigned int i;
+    unsigned int highval = 0, lowval = 1;
+    unsigned int lowindex = 0, highindex;
 
-    while ((c = getopt(argc, argv, "i:o:")) != -1) {
+    if (argc == 1)
+        usage(argv[0]);
+
+    while ((c = getopt(argc, argv, "i:o:l:h:")) != -1) {
 	    switch (c) {
         case 'i':
             inFile = strdup(optarg);
@@ -51,11 +57,21 @@ main(int argc, char *argv[])
         case 'o':
             outFile = strdup(optarg);
             break;
+        case 'h':
+            highval = atoi(optarg);
+            break;
+        case 'l':
+            lowval = atoi(optarg);
+            break;
         default:
             usage(argv[0]);
 	    }
     }
 
+    if (highval < lowval) {
+	printf("higval is less than lowval\n");
+	exit(1);
+    }
     // open and create output file
     fd = open(inFile, O_RDONLY);
     if (fd < 0) {
@@ -81,25 +97,34 @@ main(int argc, char *argv[])
     }
 
     qsort(fp, fs.st_size / sizeof(rec_t), sizeof(rec_t), compar_f);
-#ifdef DEBUG
-    for (i = 0; i<=(fs.st_size -  sizeof(rec_t)); i += sizeof(rec_t)) {
-        r = (rec_t *)(fp + i);
 
-        printf("key: %u rec:", r->key);
-        for (j = 0; j < NUMRECS; j++) 
-            printf("%u ", r->record[j]);
-        printf("\n");
+    highindex = ((fs.st_size)/sizeof(rec_t)) - 1;
+    for (i = 0; i<=highindex; i++) {
+        r = (rec_t *)(fp + i*(sizeof(rec_t)));
+
+        if (r->key < lowval)
+            continue;
+        if (!set) {
+            lowindex = i;
+            set = 1;
+        }
+
+        if (r->key <= highval)
+            continue;
+
+        highindex = i;
+        break;
     }
-#endif
 
+    printf("low %u, high %u\n", lowindex, highindex);
     // open and create output file
     fd = open(outFile, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU);
     if (fd < 0) {
 	perror("open");
 	exit(1);
     }
-	rc = write(fd, fp, fs.st_size);
-	if (rc != fs.st_size) {
+	rc = write(fd, fp + lowindex*sizeof(rec_t), (highindex-lowindex)*sizeof(rec_t));
+	if (rc != (highindex - lowindex)*sizeof(rec_t)) {
 	    perror("write");
 	    exit(1);
 	    // should probably remove file here but ...
