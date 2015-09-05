@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <unistd.h>
 
 void
 usage(char *prog) 
@@ -37,7 +37,7 @@ main(int argc, char *argv[])
     char *inFile = "/no/such/file";
     char *outFile = "/no/such/file";
     // input params
-    int c, fd;
+    int c, fd, pid, status;
     opterr = 0;
     struct stat fs;
     rec_t *r;
@@ -125,27 +125,29 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    if (ftruncate(fd, (highindex-lowindex)*sizeof(rec_t)) == -1) {
-	perror("truncate");
-	exit(1);
-    }
-#if 0
-	rc = write(fd, fp + lowindex*sizeof(rec_t), (highindex-lowindex)*sizeof(rec_t));
-	if (rc != (highindex - lowindex)*sizeof(rec_t)) {
-	    perror("write");
-	    exit(1);
-	    // should probably remove file here but ...
+    pid = fork();
+
+    if (pid < 0) {
+        perror("fork() error");
+        exit(1);
+    } else if (pid == 0) {
+        rc = pwrite(fd, fp + lowindex*sizeof(rec_t), ((highindex-lowindex)*sizeof(rec_t))/2, 0);
+        if (rc != ((highindex-lowindex)*sizeof(rec_t))/2) {
+            perror("main write");
+            exit(1);
+        }
+        //exit(0);
+            // should probably remove file here but ...
+    } else {
+        rc = pwrite(fd, fp + lowindex*sizeof(rec_t) + (((highindex-lowindex)*sizeof(rec_t))/2) + 1, ((highindex-lowindex)*sizeof(rec_t))/2, (((highindex-lowindex)*sizeof(rec_t))/2)+1);
+        if (rc != ((highindex-lowindex)*sizeof(rec_t))/2) {
+            perror("child write");
+            exit(1);
+        }
 	}
-#endif
-/* mmap the output file */
-    if ((dst = mmap (0, (highindex-lowindex)*sizeof(rec_t), PROT_READ | PROT_WRITE,
-    MAP_SHARED, fd, 0)) == MAP_FAILED)
-        perror("mmap error for output");
 
-    memcpy (dst, fp + lowindex*sizeof(rec_t), (highindex-lowindex)*sizeof(rec_t));
-
+    pid = wait(&status);
     close(fd);
-
     free(fp);
 
     return 0;
