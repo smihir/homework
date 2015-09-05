@@ -37,7 +37,7 @@ main(int argc, char *argv[])
     char *inFile = "/no/such/file";
     char *outFile = "/no/such/file";
     // input params
-    int c, fd, pid, status;
+    int c, fd, pid, status, psize;
     opterr = 0;
     struct stat fs;
     rec_t *r;
@@ -125,22 +125,23 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
+    psize = ((highindex - lowindex) * sizeof(rec_t));
     pid = fork();
 
     if (pid < 0) {
         perror("fork() error");
         exit(1);
     } else if (pid == 0) {
-        rc = pwrite(fd, fp + lowindex*sizeof(rec_t), ((highindex-lowindex)*sizeof(rec_t))/2, 0);
-        if (rc != ((highindex-lowindex)*sizeof(rec_t))/2) {
+        int size = psize >> 2;
+        rc = pwrite(fd, fp + lowindex * sizeof(rec_t), size , 0);
+        if (rc != size) {
             perror("main write");
             exit(1);
         }
-        //exit(0);
-            // should probably remove file here but ...
     } else {
-        rc = pwrite(fd, fp + lowindex*sizeof(rec_t) + (((highindex-lowindex)*sizeof(rec_t))/2) + 1, ((highindex-lowindex)*sizeof(rec_t))/2, (((highindex-lowindex)*sizeof(rec_t))/2)+1);
-        if (rc != ((highindex-lowindex)*sizeof(rec_t))/2) {
+        rc = pwrite(fd, fp + (lowindex * sizeof(rec_t)) + (psize >> 2) + 1,
+                     (psize >> 2) + (psize % 2), (psize >> 2) + 1);
+        if (rc != (psize >> 2) + (psize % 2)) {
             perror("child write");
             exit(1);
         }
