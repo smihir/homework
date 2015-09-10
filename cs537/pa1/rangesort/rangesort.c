@@ -41,8 +41,8 @@ main(int argc, char *argv[])
     opterr = 0;
     struct stat fs;
     rec_t *r;
-    char *fp, *dst;
-	int rc, j, set = 0;
+    char *fp, *f;
+	int rc, set = 0;
     unsigned int i;
     unsigned int highval = 0, lowval = 1;
     unsigned int lowindex = 0, highindex;
@@ -126,6 +126,8 @@ main(int argc, char *argv[])
     }
 
     psize = ((highindex - lowindex) * sizeof(rec_t));
+    ftruncate(fd, psize);
+    f = mmap(0, psize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     pid = fork();
 
     if (pid < 0) {
@@ -133,21 +135,13 @@ main(int argc, char *argv[])
         exit(1);
     } else if (pid == 0) {
         int size = psize >> 2;
-        rc = pwrite(fd, fp + lowindex * sizeof(rec_t), size , 0);
-        if (rc != size) {
-            perror("main write");
-            exit(1);
-        }
+        memcpy(f, fp + lowindex * sizeof(rec_t), size);
     } else {
-        rc = pwrite(fd, fp + (lowindex * sizeof(rec_t)) + (psize >> 2) + 1,
-                     (psize >> 2) + (psize % 2), (psize >> 2) + 1);
-        if (rc != (psize >> 2) + (psize % 2)) {
-            perror("child write");
-            exit(1);
-        }
+        memcpy(f + (psize >> 2) + 1, fp + (lowindex * sizeof(rec_t)) + (psize >> 2) + 1, (psize >> 2) + (psize % 2));
 	}
 
     pid = wait(&status);
+    munmap(f, psize);
     close(fd);
     free(fp);
 
