@@ -1,0 +1,7 @@
+- Disk write operation is the major bottleneck, the write speed can be improved if the file is opened with O_DIRECT flag but there are limitations to file ops with this flag(see man 2 open) and the flag is not supported in RHEL(since open() is always failing with the flag)
+
+- To use O_DIRECT flag we should defile _GNU_SOURCE before any header file is included as the flag is not defined in the POSIX standard and is Linux specific. We also might want to allocated fs block-size aligned memory(usually 512B) using posix_memalign() call instead of malloc()
+
+- Sorting time with qsort()[man 2 qsort] takes around 320ms on adelie machines for 1,000,000 records it maybe possible to reduce this time by using parallel qsort or samplesort(readup p496-frazer.pdf)
+
+- Writing with 2 threads has also helped reduce the runtime, if parallel sorting with qsort is implemented try to write from the parallel threads.
