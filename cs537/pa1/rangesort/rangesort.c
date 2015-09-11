@@ -132,16 +132,16 @@ main(int argc, char *argv[])
         perror("fork() error");
         exit(1);
     } else if (pid == 0) {
-        int size = psize >> 2;
+        int size = psize >> 1;
         rc = pwrite(fd, fp + lowindex * sizeof(rec_t), size , 0);
         if (rc != size) {
             perror("main write");
             exit(1);
         }
     } else {
-        rc = pwrite(fd, fp + (lowindex * sizeof(rec_t)) + (psize >> 2) + 1,
-                     (psize >> 2) + (psize % 2), (psize >> 2) + 1);
-        if (rc != (psize >> 2) + (psize % 2)) {
+        rc = pwrite(fd, fp + (lowindex * sizeof(rec_t)) + (psize >> 1) + 1,
+                     (psize >> 1) + (psize % 2), (psize >> 1) + 1);
+        if (rc != (psize >> 1) + (psize % 2)) {
             perror("child write");
             exit(1);
         }
