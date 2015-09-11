@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <unistd.h>
+#include <limits.h>
 
 void
 usage(char *prog) 
@@ -40,11 +41,11 @@ main(int argc, char *argv[])
     int c, fd, pid, status, psize;
     opterr = 0;
     struct stat fs;
-    rec_t *r;
-    char *fp, *dst;
-	int rc, j, set = 0;
+    rec_t *r, *rn1, *rn2;
+    char *fp, *dst, *f, *fp1, *fp2;
+	int rc, j, set = 0, count1 = 0, count2 = 0;
     unsigned int i;
-    unsigned int highval = 0, lowval = 1;
+    long unsigned int highval = 0, lowval = 1, median;
     unsigned int lowindex = 0, highindex;
 
     if (argc == 1)
@@ -59,10 +60,10 @@ main(int argc, char *argv[])
             outFile = strdup(optarg);
             break;
         case 'h':
-            highval = atoi(optarg);
+            highval = strtoul(optarg, (char **)NULL, 10);
             break;
         case 'l':
-            lowval = atoi(optarg);
+            lowval = strtoul(optarg, (char **)NULL, 10);
             break;
         default:
             usage(argv[0]);
@@ -71,6 +72,11 @@ main(int argc, char *argv[])
 
     if (highval < lowval) {
 	printf("higval is less than lowval\n");
+	exit(1);
+    }
+
+    if (highval > UINT_MAX || lowval > UINT_MAX) {
+	printf("higval or lowval is greated than UINT_MAX\n");
 	exit(1);
     }
     // open and create output file
@@ -84,40 +90,57 @@ main(int argc, char *argv[])
         exit(errno);
     }
 
-    fp = (char *)malloc(fs.st_size);
+    fp1 = (char *)malloc(fs.st_size);
+    fp2 = (char *)malloc(fs.st_size);
 
+#if 0
 	rc = read(fd, fp, fs.st_size);
 	if (rc < 0) {
 	    perror("read");
 	    exit(1);
 	}
-    (void) close(fd);
+#endif
+    f = mmap(NULL, fs.st_size, PROT_READ, MAP_SHARED, fd, 0);
+    madvise(f, fs.st_size, MADV_SEQUENTIAL);
 
-    if (fp == NULL) {
+    if (f == NULL) {
         exit(1);
     }
-
-    qsort(fp, fs.st_size / sizeof(rec_t), sizeof(rec_t), compar_f);
-
     highindex = ((fs.st_size)/sizeof(rec_t)) - 1;
+    unsigned int max = 0, min = 0;
     for (i = 0; i<=highindex; i++) {
-        r = (rec_t *)(fp + i*(sizeof(rec_t)));
+        r = (rec_t *)(f + i*(sizeof(rec_t)));
 
-        if (r->key < lowval)
+        if (r->key < lowval || r->key > highval)
             continue;
-        if (!set) {
-            lowindex = i;
-            set = 1;
+        if(r->key > max)
+            max = r->key;
+    }
+    median = max/2;
+    for (i = 0; i<=highindex; i++) {
+        r = (rec_t *)(f + i*(sizeof(rec_t)));
+        rn1 = (rec_t *)(fp1 + count1*(sizeof(rec_t)));
+        rn2 = (rec_t *)(fp2 + count2*(sizeof(rec_t)));
+
+        if (r->key < lowval || r->key > highval)
+            continue;
+
+        if (r->key < median) {
+            memcpy(rn1, r, sizeof(rec_t));
+            count1++;
+        } else {
+            memcpy(rn2, r, sizeof(rec_t));
+            count2++;
         }
 
-        if (r->key <= highval)
-            continue;
-
-        highindex = i;
-        break;
     }
 
-    printf("low %u, high %u\n", lowindex, highindex);
+    printf("count1 %d, count2 %d total %d %lu\n", count1, count2, count1+ count2 +2, sizeof(unsigned int));
+    munmap(f, fs.st_size);
+    (void) close(fd);
+
+    lowindex = 0;
+
     // open and create output file
     fd = open(outFile, O_RDWR|O_CREAT|O_TRUNC, S_IRWXU);
     if (fd < 0) {
@@ -125,31 +148,35 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    psize = ((highindex - lowindex) * sizeof(rec_t));
     pid = fork();
 
     if (pid < 0) {
         perror("fork() error");
         exit(1);
     } else if (pid == 0) {
-        int size = psize >> 1;
-        rc = pwrite(fd, fp + lowindex * sizeof(rec_t), size , 0);
-        if (rc != size) {
+        printf("parent start\n");
+        qsort(fp1, count1, sizeof(rec_t), compar_f);
+        rc = pwrite(fd, fp1, (count1) * sizeof(rec_t) , 0);
+        if (rc != (count1) * sizeof(rec_t)) {
             perror("main write");
             exit(1);
         }
+        printf("parent end\n");
     } else {
-        rc = pwrite(fd, fp + (lowindex * sizeof(rec_t)) + (psize >> 1) + 1,
-                     (psize >> 1) + (psize % 2), (psize >> 1) + 1);
-        if (rc != (psize >> 1) + (psize % 2)) {
+        printf("pch start\n");
+        qsort(fp2, count2, sizeof(rec_t), compar_f);
+        rc = pwrite(fd, fp2, (count2) * sizeof(rec_t), (count1) * sizeof(rec_t));
+        if (rc != (count2) * sizeof(rec_t)) {
             perror("child write");
             exit(1);
         }
+        printf("pch end\n");
 	}
 
     pid = wait(&status);
     close(fd);
-    free(fp);
+    free(fp1);
+    free(fp2);
 
     return 0;
 }
