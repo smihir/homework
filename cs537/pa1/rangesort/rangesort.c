@@ -20,8 +20,8 @@ typedef struct __srec_t {
 void
 usage(char *prog) 
 {
-    fprintf(stderr, "usage: %s <-i inputfile> <-o outputfile> <-l lowvalue> "
-                    "<-h highvalue>\n", prog);
+    fprintf(stderr, "Usage: rangesort -i inputfile -o outputfile -l lowvalue "
+                    "-h highvalue\n");
     exit(1);
 }
 
@@ -48,10 +48,10 @@ main(int argc, char *argv[])
     struct stat fs;
     rec_t *r;
     srec_t *rn1, *rn2;
-    char *fp, *dst, *f, *fp1, *fp2;
+    char *fp, *dst, *f, *fp1, *fp2, *endptr;
 	int rc, j, set = 0, count1 = 0, count2 = 0;
     unsigned int i;
-    long unsigned int highval = 0, lowval = 1, median;
+    long unsigned int highval = ULLONG_MAX, lowval = ULLONG_MAX, median;
     unsigned int lowindex = 0, highindex;
 
     if (argc == 1)
@@ -61,34 +61,53 @@ main(int argc, char *argv[])
 	    switch (c) {
         case 'i':
             inFile = strdup(optarg);
+            set++;
             break;
         case 'o':
             outFile = strdup(optarg);
+            set++;
             break;
         case 'h':
-            highval = strtoul(optarg, (char **)NULL, 10);
+            highval = strtoul(optarg, (char **)&endptr, 10);
+            if (endptr == optarg || errno == ERANGE) {
+	            fprintf(stderr,"Error: Invalid range value\n");
+	            exit(1);
+            }
+            set++;
             break;
         case 'l':
-            lowval = strtoul(optarg, (char **)NULL, 10);
+            lowval = strtoul(optarg, (char **)&endptr, 10);
+            if (endptr == optarg || errno == ERANGE) {
+	            fprintf(stderr,"Error: Invalid range value\n");
+	            exit(1);
+            }
+            set++;
             break;
         default:
             usage(argv[0]);
 	    }
     }
 
-    if (highval < lowval) {
-	printf("higval is less than lowval\n");
+
+    if (set !=4 ) {
+    usage(argv[0]);
 	exit(1);
     }
 
     if (highval > UINT_MAX || lowval > UINT_MAX) {
-	printf("higval or lowval is greated than UINT_MAX\n");
+	fprintf(stderr, "Error: Invalid range value\n");
 	exit(1);
     }
+
+    if (highval < lowval) {
+	fprintf(stderr, "Error: Invalid range value\n");
+	exit(1);
+    }
+
     // open and create output file
     ofd = open(inFile, O_RDONLY);
     if (ofd < 0) {
-	perror("open");
+	fprintf(stderr,"Error: Cannot open file %s\n", inFile);
 	exit(1);
     }
 
@@ -105,9 +124,11 @@ main(int argc, char *argv[])
     if (f == NULL) {
         exit(1);
     }
-    highindex = ((fs.st_size)/sizeof(rec_t)) - 1;
+
+    highindex = ((fs.st_size)/sizeof(rec_t));
+
     unsigned int max = 0, min = 0;
-    for (i = 0; i<=highindex; i++) {
+    for (i = 0; i<highindex; i++) {
         r = (rec_t *)(f + i*(sizeof(rec_t)));
 
         if (r->key < lowval || r->key > highval)
@@ -116,7 +137,7 @@ main(int argc, char *argv[])
             max = r->key;
     }
     median = max/2;
-    for (i = 0; i<=highindex; i++) {
+    for (i = 0; i<highindex; i++) {
         r = (rec_t *)(f + i*(sizeof(rec_t)));
         rn1 = (srec_t *)(fp1 + count1*(sizeof(srec_t)));
         rn2 = (srec_t *)(fp2 + count2*(sizeof(srec_t)));
@@ -133,19 +154,20 @@ main(int argc, char *argv[])
             rn2->key = r->key;
             rn2->precord = r->record;
             count2++;
-            //printf("%d %d %llu %u %p\n", __LINE__, getpid(), rn2->precord, rn2->key, rn2);
+            //printf("%d %d %p %u %p\n", __LINE__, getpid(), rn2->precord, rn2->key, rn2);
         }
 
     }
 
-    printf("count1 %d, count2 %d total %d %lu %lu\n", count1, count2, count1+ count2, sizeof(unsigned int), sizeof(void *));
+    //printf("count1 %d, count2 %d total %d %lu %lu\n", count1, count2, count1+ count2, sizeof(unsigned int), sizeof(void *));
     lowindex = 0;
 
     // open and create output file
     fd = open(outFile, O_RDWR|O_CREAT|O_TRUNC, S_IRWXU);
     if (fd < 0) {
-	perror("open");
-	exit(1);
+	fprintf(stderr, "Error: Cannot open file %s\n", outFile);
+	//exit(1);
+    return 1;
     }
     
     //printf("pid parent %d\n",getpid());
@@ -173,7 +195,7 @@ main(int argc, char *argv[])
             sr = (srec_t *)(fp1 + l*(sizeof(srec_t)));
             fr = (rec_t *)(sfp1 + l*(sizeof(rec_t)));
             fr->key = sr->key;
-            memcpy(fr->record, sr->precord, NUMRECS);
+            memcpy(fr->record, sr->precord, NUMRECS * sizeof(unsigned int));
         }
 #endif
         //printf("%d %d\n", __LINE__, getpid());
@@ -198,15 +220,15 @@ main(int argc, char *argv[])
         for (k = 0; k<count2; k++) {
             sr1 = (srec_t *)(fp2 + k*(sizeof(srec_t)));
             fr1 = (rec_t *)(sfp2 + k*(sizeof(rec_t)));
-            //printf("%d %p %u\n", __LINE__, sr1, sr1->key);
+            //printf("%d %p %u %p\n", __LINE__, sr1, sr1->key, sr1->precord);
 
             fr1->key = sr1->key;
-            memcpy(fr1->record, sr1->precord, NUMRECS);
+            memcpy(fr1->record, sr1->precord, NUMRECS*sizeof(unsigned int));
         }
 
         //printf("%d %d\n", __LINE__, getpid());
 #if 1
-        rc = pwrite(fd, fp2, (count2) * sizeof(rec_t), (count1) * sizeof(rec_t));
+        rc = pwrite(fd, sfp2, (count2) * sizeof(rec_t), (count1) * sizeof(rec_t));
         if (rc != (count2) * sizeof(rec_t)) {
             perror("child write");
             exit(1);
@@ -215,8 +237,9 @@ main(int argc, char *argv[])
         //printf("pch end\n");
 	}
 
+out:
     pid = wait(&status);
-    printf("%d %d status = %d\n", __LINE__, getpid(), status);
+    //printf("%d %d status = %d\n", __LINE__, getpid(), status);
     close(fd);
     free(fp1);
     free(fp2);
