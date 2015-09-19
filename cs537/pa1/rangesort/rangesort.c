@@ -217,13 +217,13 @@ main(int argc, char *argv[])
         }
 	}
 
-    pid = wait(&status);
     close(fd);
     free(fp1);
     free(fp2);
     munmap(f, fs.st_size);
     (void) close(ofd);
 
+    pid = wait(&status);
 
     return 0;
 }
