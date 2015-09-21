@@ -2,26 +2,23 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-#define SENTINEL INT_MAX
 
-typedef struct {
-    int * array;
-    int inversions;
-}count_inv;
+int merge(int *array, int l_index, int r_index, int l_end_index);
 
-/*
- * function merge-sort(array, l-index, r-index)
- *     if (l-index > r-index)
- *         return;
- *
- *      merge-sort(array, l-index, r-index/2);
- *      merge-sort(array, r-index/2 + 1, r-index);
- *      merge(array, l-index, r-index, r-index/2);
- *      return;
- */
-
-void merge(count_inv * inv, int l_index, int r_index, int l_end_index);
+#define gc getchar_unlocked
+int read_int()
+{
+    int ret = 0;
+    char c = gc();
+    while(c<'0' || c>'9') c = gc();
+    while(c>='0' && c<='9') {
+        ret = 10 * ret + c - 48;
+        c = gc();
+    }
+    return ret;
+}
 
 void print_array(char *s, int * array, int size)
 {
@@ -38,71 +35,76 @@ void print_array(char *s, int * array, int size)
 
 }
 
-void merge_sort(count_inv *inv, int l_index, int r_index)
+int merge_sort(int *array, int l_index, int r_index)
 {
-    int mid;
+    int mid, c1, c2 ,c3;
 
     if (l_index >= r_index)
-        return;
+        return 0;
 
     mid = l_index + ((r_index - l_index)/2);
     
-    merge_sort(inv, l_index, mid);
-    merge_sort(inv, mid + 1, r_index);
-    merge(inv, l_index, r_index, mid);
+    c1 = merge_sort(array, l_index, mid);
+    c2 = merge_sort(array, mid + 1, r_index);
+    c3 = merge(array, l_index, r_index, mid);
+    return (c1 + c2 + c3);
 }
 
-void merge(count_inv * inv, int l_index, int r_index, int l_end_index)
+inline int merge(int *array, int l_index, int r_index, int l_end_index)
 {
-    int *l_copy, *r_copy;
+    int *r_copy;
     int l_size = l_end_index - l_index + 1;
     int r_size = r_index - l_end_index;
     int i, j = 0, k = 0;
-    int *array = inv->array;
-   
-    // Last +1 is for SENTINEL 
-    l_copy = malloc((l_size + 1) * sizeof(int));
-    r_copy = malloc((r_size + 1) * sizeof(int));
+    int inv = 0;
+    int l_copy[l_size];
 
-    memcpy(l_copy, array + l_index, l_size*sizeof(int));
-    memcpy(r_copy, array + l_end_index + 1, r_size*sizeof(int));
+    r_copy = l_copy + l_size;
 
-    l_copy[l_size] = SENTINEL;
-    r_copy[r_size] = SENTINEL;
+    memcpy(l_copy, array + l_index, (l_size + r_size)*sizeof(int));
 
     for (i = 0; i < (l_size + r_size); i++) {
         if (l_copy[j] <= r_copy[k]) {
-            array[l_index + i] = l_copy[j];
-            j++;
+            array[l_index + i] = l_copy[j++];
+            if (j == l_size) {
+                memcpy(array + l_index + i + 1, r_copy + k, (r_size - k)*sizeof(int));
+                return inv;
+            }
         } else {
-            array[l_index + i] = r_copy[k];
-            k++;
-            inv->inversions = inv->inversions + (l_size - j);
+            array[l_index + i] = r_copy[k++];
+            inv += (l_size - j);
+            if (k == r_size) {
+                memcpy(array + l_index + i + 1, l_copy + j, (l_size - j)*sizeof(int));
+                return inv;
+            }
         }
     }
-    free(l_copy);
-    free(r_copy);
+    return inv;
 }
 
 int main(int argc, char **argv)
 {
     int nruns, size, i;
     int inarray[100001];
-    count_inv inv_counter;
+    char buf[100];
+    int offset = 0;
+    int inv;
    
-    inv_counter.array = inarray;
-    scanf("%d", &nruns);
+    //scanf("%d", &nruns);
+    nruns = read_int();
 
     while (nruns >= 1) {
-        scanf("%d", &size);
+        //scanf("%d", &size);
+        size = read_int();
         for (i = 0; i < size; i++)
-            scanf("%d", &inarray[i]);
+            //scanf("%d", &inarray[i]);
+            inarray[i] = read_int();
 
-        inv_counter.inversions = 0;
+        inv = merge_sort(inarray, 0, size - 1);
 
-        merge_sort(&inv_counter, 0, size - 1);
-        printf("%d\n", inv_counter.inversions);
+        offset += sprintf(buf + offset, "%d\n", inv);
         
         nruns--;
     }
+    write(1, buf, offset);
 }
