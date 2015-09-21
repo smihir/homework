@@ -59,15 +59,14 @@ inline int merge(int *array, int l_index, int r_index, int l_end_index)
     int inv = 0;
     int l_copy[l_size];
 
-    r_copy = l_copy + l_size;
+    r_copy = array + l_index + l_size;
 
-    memcpy(l_copy, array + l_index, (l_size + r_size)*sizeof(int));
+    memcpy(l_copy, array + l_index, (l_size)*sizeof(int));
 
     for (i = 0; i < (l_size + r_size); i++) {
         if (l_copy[j] <= r_copy[k]) {
             array[l_index + i] = l_copy[j++];
             if (j == l_size) {
-                memcpy(array + l_index + i + 1, r_copy + k, (r_size - k)*sizeof(int));
                 return inv;
             }
         } else {
@@ -90,14 +89,11 @@ int main(int argc, char **argv)
     int offset = 0;
     int inv;
    
-    //scanf("%d", &nruns);
     nruns = read_int();
 
     while (nruns >= 1) {
-        //scanf("%d", &size);
         size = read_int();
         for (i = 0; i < size; i++)
-            //scanf("%d", &inarray[i]);
             inarray[i] = read_int();
 
         inv = merge_sort(inarray, 0, size - 1);
