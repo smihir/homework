@@ -21,7 +21,7 @@ typedef struct {
  *      return;
  */
 
-void merge(int * array, int l_index, int r_index, int l_end_index);
+void merge(count_inv * inv, int l_index, int r_index, int l_end_index);
 
 void print_array(char *s, int * array, int size)
 {
@@ -38,7 +38,7 @@ void print_array(char *s, int * array, int size)
 
 }
 
-void merge_sort(int *array, int l_index, int r_index)
+void merge_sort(count_inv *inv, int l_index, int r_index)
 {
     int mid;
 
@@ -47,21 +47,22 @@ void merge_sort(int *array, int l_index, int r_index)
 
     mid = l_index + ((r_index - l_index)/2);
     
-    merge_sort(array, l_index, mid);
-    merge_sort(array, mid + 1, r_index);
-    merge(array, l_index, r_index, mid);
+    merge_sort(inv, l_index, mid);
+    merge_sort(inv, mid + 1, r_index);
+    merge(inv, l_index, r_index, mid);
 }
 
-void merge(int * array, int l_index, int r_index, int l_end_index)
+void merge(count_inv * inv, int l_index, int r_index, int l_end_index)
 {
     int *l_copy, *r_copy;
     int l_size = l_end_index - l_index + 1;
     int r_size = r_index - l_end_index;
     int i, j = 0, k = 0;
+    int *array = inv->array;
    
     // Last +1 is for SENTINEL 
-    l_copy = malloc(l_size + 1);
-    r_copy = malloc(r_size + 1);
+    l_copy = malloc((l_size + 1) * sizeof(int));
+    r_copy = malloc((r_size + 1) * sizeof(int));
 
     memcpy(l_copy, array + l_index, l_size*sizeof(int));
     memcpy(r_copy, array + l_end_index + 1, r_size*sizeof(int));
@@ -76,6 +77,7 @@ void merge(int * array, int l_index, int r_index, int l_end_index)
         } else {
             array[l_index + i] = r_copy[k];
             k++;
+            inv->inversions = inv->inversions + (l_size - j);
         }
     }
     free(l_copy);
@@ -86,17 +88,20 @@ int main(int argc, char **argv)
 {
     int nruns, size, i;
     int inarray[100001];
-    
+    count_inv inv_counter;
+   
+    inv_counter.array = inarray;
     scanf("%d", &nruns);
 
     while (nruns >= 1) {
         scanf("%d", &size);
         for (i = 0; i < size; i++)
             scanf("%d", &inarray[i]);
-        print_array("In Array:", inarray, size);
 
-        merge_sort(inarray, 0, size - 1);
-        print_array("Out Array:", inarray, size);
+        inv_counter.inversions = 0;
+
+        merge_sort(&inv_counter, 0, size - 1);
+        printf("%d\n", inv_counter.inversions);
         
         nruns--;
     }
