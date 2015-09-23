@@ -47,7 +47,7 @@ char **parseInput(char *cmdLine)
 
 int main(int argc, char *argv[])
 {
-	//while()				//Loop not working
+	while(1)
 	{
 		int childPid;
 		
@@ -68,12 +68,12 @@ int main(int argc, char *argv[])
 			// else system call
 
 			childPid = fork();
-			if(childPid > 0) 
+			if(childPid == 0) 
 			{
 				execvp(argv[0], argv);
 				printf("Error in command execution\n");
 			} 
-			else 
+			else if(childPid > 0) 
 			{
 				waitpid(childPid, NULL, 0);
 			}
