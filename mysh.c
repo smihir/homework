@@ -16,7 +16,7 @@ void printError()
 	write(STDERR_FILENO, error_message, strlen(error_message));
 }
 
-char *readLine()
+char *readInput()
 {
 	char* cmdLine = malloc(MAX_LENGTH * sizeof(char));	
 	fgets(cmdLine, MAX_LENGTH, stdin);		//TODO: check if we need to handle null return case
@@ -32,17 +32,17 @@ char *readLine()
 
 char **parseInput(char *cmdLine)
 {
-	char **argv = malloc (MAX_LENGTH * sizeof(char*)); 	//TODO: check suitable size to allocate memory
+	char **tokenList = malloc (MAX_LENGTH * sizeof(char*)); 	//TODO: check suitable size to allocate memory
 	char *token = strtok(cmdLine, TOKEN_DELIM);
 	int i = 0;
 	while(token != NULL)
 	{
-		argv[i] = token;
+		tokenList[i] = token;
 		i++;
 		token = strtok(NULL, TOKEN_DELIM);
 	}
-		argv[i] = NULL;	
-	return argv;
+		tokenList[i] = NULL;	
+	return tokenList;
 }
 
 int main(int argc, char *argv[])
@@ -55,12 +55,12 @@ int main(int argc, char *argv[])
 		printf("mysh # ");
 
 		// read input from command line or batch file
-		char *cmdLine = readLine();
+		char *cmdLine = readInput();
 
 		if(cmdLine != NULL && strlen(cmdLine) > 1) 
 		{
 			// parse input to get command
-			char **argv = parseInput(cmdLine);
+			char **shArgv = parseInput(cmdLine);
 			// record command for history
 
 			// if built in command, execute command
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 			childPid = fork();
 			if(childPid == 0) 
 			{
-				execvp(argv[0], argv);
+				execvp(shArgv[0], shArgv);
 				printf("Error in command execution\n");
 			} 
 			else if(childPid > 0) 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 				waitpid(childPid, NULL, 0);
 			}
 			free(cmdLine);
-			free(argv);
+			free(shArgv);
 		}
 	}
 	return 0;
