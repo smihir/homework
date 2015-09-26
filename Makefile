@@ -1,14 +1,23 @@
-CFLAGS += -Wall -Werror 
 CC = gcc
+CSCOPE = cscope
+CFLAGS += -Wall -Werror
+
+OBJS := mysh.o \
+		readline.o \
+		print.o \
 
 ifeq ($(DEBUG), y)
  CFLAGS += -g -DDEBUG
 endif
 
-mysh: mysh.o
+mysh: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o mysh
 
-mysh.o: mysh.c
-	$(CC) -c $(CFLAGS) mysh.c
+%.o: %.c *.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+cscope:
+	$(CSCOPE) -bqR
 
 .PHONY: clean
 clean:
