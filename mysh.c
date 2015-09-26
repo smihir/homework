@@ -1,3 +1,4 @@
+/* ex: set tabstop=4 noexpandtab: */
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>
