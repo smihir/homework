@@ -13,6 +13,13 @@ void do_execute(char **shArgs)
 {
 	int childPid;
 
+	// if first argument is NULL, silently return
+	// we don't want to throw errors here because
+	// this condtion is encountered when user presses
+	// 'Enter' on an empty command line.
+	if (shArgs[0] == NULL)
+		return;
+
 	childPid = fork();
 	if (childPid == 0) {
 		execvp(shArgs[0], shArgs);
