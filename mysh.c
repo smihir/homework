@@ -52,10 +52,10 @@ int process_file(char *batch_file)
 			continue;
 		}
 
-		display_command(cmdLine);
-
 		// parse input to get command
 		char **shArgv = parseInput(cmdLine);
+
+		display_command(shArgv);
 
 		// if built in command, execute command
 

@@ -6,9 +6,6 @@
 #include "print.h"
 #include "readline.h"
 
-#define MAX_LENGTH 514
-#define TOKEN_DELIM " \t\n\r"
-
 //check if input string is more than 512 characters
 static inline int overflow(char * str)
 {

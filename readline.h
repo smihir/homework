@@ -1,6 +1,9 @@
 #ifndef _MYSH_READLINE_H
 #define _MYSH_READLINE_H
 
+#define MAX_LENGTH 514
+#define TOKEN_DELIM " \t\n\r"
+
 typedef enum {
     INPUT_READ_OK = 0,
     INPUT_READ_OVERFLOW = 1,
