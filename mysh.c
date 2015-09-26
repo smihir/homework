@@ -65,6 +65,7 @@ int process_file(char *batch_file)
 		free(cmdLine);
 		free(shArgv);
 	}
+	fclose(batch_stream);
 	return 0;
 }
 
