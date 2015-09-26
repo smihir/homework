@@ -74,6 +74,8 @@ void run(void)
 			childPid = fork();
 			if (childPid == 0) {
 				execvp(shArgv[0], shArgv);
+
+				//TODO: Check if this should be printf() or printError()
 				printf("Error in command execution\n");
 			}
 			else if (childPid > 0) {
