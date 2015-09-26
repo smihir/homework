@@ -46,7 +46,12 @@ char **parseInput(char *cmdLine)
 	return tokenList;
 }
 
-int main(int argc, char *argv[])
+int process_file(char * batch_file)
+{
+	return 0;
+}
+
+void run(void)
 {
 	while (1) {
 		int childPid;
@@ -77,6 +82,21 @@ int main(int argc, char *argv[])
 			free(cmdLine);
 			free(shArgv);
 		}
+	}
+}
+
+int main(int argc, char *argv[])
+{
+	if (argc == 1) {
+		// Run interactive shell
+		run();
+	} else if (argc == 2) {
+		// Run batchmode processing
+		return process_file(argv[1]);
+	} else {
+		// unsupported mode!
+		printError();
+		return 1;
 	}
 	return 0;
 }
