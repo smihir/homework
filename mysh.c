@@ -9,8 +9,6 @@
 #define MAX_LENGTH 514
 #define TOKEN_DELIM " \t\n\r"
 
-
-
 void printError()
 {
 	char error_message[30] = "An error has occurred\n";
@@ -19,47 +17,47 @@ void printError()
 
 char *readInput()
 {
-	char* cmdLine = malloc(MAX_LENGTH * sizeof(char));	
-	fgets(cmdLine, MAX_LENGTH, stdin);		//TODO: check if we need to handle null return case
+	char* cmdLine = malloc(MAX_LENGTH * sizeof(char));
+
+	//TODO: check if we need to handle null return case
+	fgets(cmdLine, MAX_LENGTH, stdin);
+
 	//input string is more than 512 characters
-	if(strlen(cmdLine) == MAX_LENGTH -1 && cmdLine[MAX_LENGTH -2] != '\n') 
-	{
+	if(strlen(cmdLine) == MAX_LENGTH -1 && cmdLine[MAX_LENGTH -2] != '\n') {
 		printError();
 		return NULL;
 	}
+
 	return cmdLine;
 }
 
-
 char **parseInput(char *cmdLine)
 {
-	char **tokenList = malloc (MAX_LENGTH * sizeof(char*)); 	//TODO: check suitable size to allocate memory
+    //TODO: check suitable size to allocate memory
+	char **tokenList = malloc (MAX_LENGTH * sizeof(char*));
 	char *token = strtok(cmdLine, TOKEN_DELIM);
 	int i = 0;
-	while(token != NULL)
-	{
+	while (token != NULL) {
 		tokenList[i] = token;
 		i++;
 		token = strtok(NULL, TOKEN_DELIM);
 	}
-		tokenList[i] = NULL;	
+		tokenList[i] = NULL;
 	return tokenList;
 }
 
 int main(int argc, char *argv[])
 {
-	while(1)
-	{
+	while (1) {
 		int childPid;
-		
+
 		// print command line
 		printf("mysh # ");
 
 		// read input from command line or batch file
 		char *cmdLine = readInput();
 
-		if(cmdLine != NULL && strlen(cmdLine) > 1) 
-		{
+		if (cmdLine != NULL && strlen(cmdLine) > 1) {
 			// parse input to get command
 			char **shArgv = parseInput(cmdLine);
 			// record command for history
@@ -69,13 +67,11 @@ int main(int argc, char *argv[])
 			// else system call
 
 			childPid = fork();
-			if(childPid == 0) 
-			{
+			if (childPid == 0) {
 				execvp(shArgv[0], shArgv);
 				printf("Error in command execution\n");
-			} 
-			else if(childPid > 0) 
-			{
+			}
+			else if (childPid > 0) {
 				waitpid(childPid, NULL, 0);
 			}
 			free(cmdLine);
