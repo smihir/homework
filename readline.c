@@ -82,7 +82,7 @@ REDIR_PARSE_STATUS check_redirection(char *cmdLine)
         file = strtok(last, " \r\t\n");
 		i = 0;
         while (file != NULL) {
-            i++;
+			i++;
 			last = file;
             file = strtok(NULL, " \r\t\n");
         }
