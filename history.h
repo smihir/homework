@@ -9,9 +9,9 @@ typedef struct _ll_node {
 }ll_node;
 
 typedef struct _ll{
-	
-	ll_node *head;
-	ll_node *tail;
+	int head;
+	int tail;
+	int counter;
 	ll_node cmd_list[MAX_CMD_SIZE]; 
 }ll;
 
