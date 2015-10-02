@@ -45,12 +45,40 @@ void do_execute(char **shArgs, int do_redir, char *file)
 	}
 }
 
+void run_cmd(char *cmdLine)
+{
+
+	int redirect_status = check_redirection(cmdLine);
+	if (redirect_status == REDIR_ERROR) {
+		printError();
+		free(cmdLine);
+		return;
+	}
+
+	//TODO: add command only if valid
+	add_cmd(cmdLine);
+
+	// parse input to get command
+	char **shArgv = parseInput(cmdLine);
+			
+	if(shArgv[0] != NULL) {
+		if(do_builtin(shArgv)) {
+			return;
+		} else {
+			do_execute(shArgv,
+							redirect_status == REDIR_OK_REDIR ?
+							1 : 0, redir_file);
+		}
+	}
+	free(cmdLine);
+	free(shArgv);
+}
+
 int process_file(char *batch_file)
 {
 	FILE * batch_stream;
 	char *cmdLine;
 	READ_STATUS s;
-	int redirect_status;
 
 	batch_stream = fopen(batch_file, "r");
 
@@ -68,32 +96,7 @@ int process_file(char *batch_file)
 			free(cmdLine);
 			continue;
 		}
-
-		redirect_status = check_redirection(cmdLine);
-		if (redirect_status == REDIR_ERROR) {
-			printError();
-			free(cmdLine);
-			continue;
-		}
-		// parse input to get command
-		char **shArgv = parseInput(cmdLine);
-
-		display_command(shArgv);
-
-		// if built in command, execute command
-
-		// else system call
-		if(shArgv[0] != NULL) {
-			if(do_builtin(shArgv)) {
-				continue;
-			} else {
-				do_execute(shArgv,
-							redirect_status == REDIR_OK_REDIR ?
-							1 : 0, redir_file);
-			}
-		}
-		free(cmdLine);
-		free(shArgv);
+		run_cmd(cmdLine);
 	}
 	fclose(batch_stream);
 	return 0;
@@ -103,7 +106,6 @@ void run(void)
 {
 	READ_STATUS s;
 	char *cmdLine;
-	int redirect_status;
 
 	while (1) {
 
@@ -114,32 +116,7 @@ void run(void)
 		s = readInput(stdin, &cmdLine);
 
 		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
-
-			redirect_status = check_redirection(cmdLine);
-			if (redirect_status == REDIR_ERROR) {
-				printError();
-				free(cmdLine);
-				continue;
-			}
-			//TODO: add command only if valid
-			add_cmd(cmdLine);
-			// parse input to get command
-			char **shArgv = parseInput(cmdLine);
-			// record command for history
-
-			// if built in command, execute command
-			if(shArgv[0] != NULL) {
-				if(do_builtin(shArgv)) {
-					continue;
-				} else {
-					// else system call
-					do_execute(shArgv,
-								redirect_status == REDIR_OK_REDIR ?
-								1 : 0, redir_file);
-				}
-			}
-			free(cmdLine);
-			free(shArgv);
+			run_cmd(cmdLine);
 		}
 	}
 }
