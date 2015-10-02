@@ -5,6 +5,7 @@ CFLAGS += -Wall -Werror
 OBJS := mysh.o \
 		readline.o \
 		print.o \
+		builtin.o \
 
 ifeq ($(DEBUG), y)
  CFLAGS += -g -DDEBUG

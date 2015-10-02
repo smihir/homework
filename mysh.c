@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include "readline.h"
 #include "print.h"
+#include "builtin.h"
+
 
 void do_execute(char **shArgs)
 {
@@ -24,9 +26,7 @@ void do_execute(char **shArgs)
 	if (childPid == 0) {
 		execvp(shArgs[0], shArgs);
 
-		//TODO: Check if this should be printf() or printError()
-		printf("Error in command execution\n");
-
+		printError();
 		//execvp failed - Exit from the child!!!
 		//otherwise child will continue after this function call...
 		exit(1);
@@ -67,7 +67,13 @@ int process_file(char *batch_file)
 		// if built in command, execute command
 
 		// else system call
-		do_execute(shArgv);
+		if(shArgv[0] != NULL) {
+			if(do_builtin(shArgv)) {
+				continue;
+			} else {
+				do_execute(shArgv);
+			}
+		}
 
 		free(cmdLine);
 		free(shArgv);
@@ -95,10 +101,13 @@ void run(void)
 			// record command for history
 
 			// if built in command, execute command
-
-			// else system call
-			do_execute(shArgv);
-
+			if(shArgv[0] != NULL) {
+				if(do_builtin(shArgv)) {
+					continue;
+				} else {
+					do_execute(shArgv);
+				}
+			}
 			free(cmdLine);
 			free(shArgv);
 		}
