@@ -9,6 +9,7 @@
 #include "readline.h"
 #include "print.h"
 #include "builtin.h"
+#include "history.h"
 
 void do_execute(char **shArgs, int do_redir, char *file)
 {
@@ -120,7 +121,8 @@ void run(void)
 				free(cmdLine);
 				continue;
 			}
-
+			//TODO: add command only if valid
+			add_cmd(cmdLine);
 			// parse input to get command
 			char **shArgv = parseInput(cmdLine);
 			// record command for history
@@ -143,7 +145,8 @@ void run(void)
 }
 
 int main(int argc, char *argv[])
-{
+{	
+	init_ll();
 	if (argc == 1) {
 		// Run interactive shell
 		run();
