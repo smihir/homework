@@ -103,6 +103,7 @@ void run(void)
 {
 	READ_STATUS s;
 	char *cmdLine;
+	char *histCmd;
 	int redirect_status;
 
 	while (1) {
@@ -115,21 +116,34 @@ void run(void)
 
 		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
 
+			histCmd = strdup(cmdLine);
+
 			redirect_status = check_redirection(cmdLine);
 			if (redirect_status == REDIR_ERROR) {
 				printError();
 				free(cmdLine);
+				free(histCmd);
 				continue;
 			}
-			//TODO: add command only if valid
-			add_cmd(cmdLine);
+
 			// parse input to get command
 			char **shArgv = parseInput(cmdLine);
+			if (is_builtin(shArgv) != -1 && redirect_status == REDIR_OK_REDIR) {
+				printError();
+				free(cmdLine);
+				free(shArgv);
+				continue;
+			}
+
 			// record command for history
+			add_cmd(histCmd);
 
 			// if built in command, execute command
 			if(shArgv[0] != NULL) {
 				if(do_builtin(shArgv)) {
+					free(histCmd);
+					free(cmdLine);
+					free(shArgv);
 					continue;
 				} else {
 					// else system call
@@ -140,6 +154,7 @@ void run(void)
 			}
 			free(cmdLine);
 			free(shArgv);
+			free(histCmd);
 		}
 	}
 }

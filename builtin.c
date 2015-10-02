@@ -3,6 +3,7 @@
 #include "print.h"
 #include "history.h"
 
+char builtins[][10] = {"exit", "history", "!"};
 
 void call_exit(char **shArgs)
 {
@@ -21,6 +22,18 @@ void call_history(char **shArgs)
 		printError();
 	}	
 
+}
+
+int is_builtin(char** shArgs)
+{
+    int i;
+    for (i = 0; i < sizeof(builtins)/sizeof(builtins[0]); i++) {
+        if (strncmp(shArgs[0], builtins[i], sizeof(builtins[i])) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 int do_builtin(char** shArgs)
