@@ -6,6 +6,7 @@ OBJS := mysh.o \
 		readline.o \
 		print.o \
 		builtin.o \
+		history.o \
 
 ifeq ($(DEBUG), y)
  CFLAGS += -g -DDEBUG
