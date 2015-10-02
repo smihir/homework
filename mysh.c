@@ -9,7 +9,7 @@
 #include "readline.h"
 #include "print.h"
 #include "builtin.h"
-
+#include "history.h"
 
 void do_execute(char **shArgs)
 {
@@ -86,7 +86,6 @@ void run(void)
 {
 	READ_STATUS s;
 	char *cmdLine;
-
 	while (1) {
 
 		// print command line
