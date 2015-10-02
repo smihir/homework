@@ -21,6 +21,6 @@ void add_cmd(char *cmd);
 
 char *get_nth_cmd(int n);
 
-void get_all_cmd();
+void display_all_cmd();
 
 #endif /* _MYSH_HISTORY_H */

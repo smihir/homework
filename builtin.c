@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "print.h"
+#include "history.h"
 
 
 void call_exit(char **shArgs)
@@ -15,7 +16,7 @@ void call_exit(char **shArgs)
 void call_history(char **shArgs)
 {
 	if(shArgs[1] == NULL) {
-			
+        display_all_cmd();
 	} else {
 		printError();
 	}	
