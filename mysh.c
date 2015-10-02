@@ -47,31 +47,41 @@ void do_execute(char **shArgs, int do_redir, char *file)
 
 void run_cmd(char *cmdLine)
 {
-
+	char *histCmd = strdup(cmdLine);
 	int redirect_status = check_redirection(cmdLine);
 	if (redirect_status == REDIR_ERROR) {
 		printError();
 		free(cmdLine);
+		free(histCmd);
 		return;
 	}
 
-	//TODO: add command only if valid
-	add_cmd(cmdLine);
-
-	// parse input to get command
 	char **shArgv = parseInput(cmdLine);
-			
+	if (is_builtin(shArgv) != -1 && redirect_status == REDIR_OK_REDIR) {
+		printError();
+		free(cmdLine);
+		free(shArgv);
+		return;
+	}
+
+	//TODO: add only for valid cases
+	add_cmd(histCmd);
+
 	if(shArgv[0] != NULL) {
 		if(do_builtin(shArgv)) {
+			free(histCmd);
+			free(cmdLine);
+			free(shArgv);
 			return;
 		} else {
 			do_execute(shArgv,
-							redirect_status == REDIR_OK_REDIR ?
+						redirect_status == REDIR_OK_REDIR ?
 							1 : 0, redir_file);
 		}
 	}
 	free(cmdLine);
 	free(shArgv);
+	free(histCmd);
 }
 
 int process_file(char *batch_file)
@@ -88,7 +98,7 @@ int process_file(char *batch_file)
 	}
 
 	//while (cmdLine != NULL && strlen(cmdLine) > 1) {
-	for (s = readInput(batch_stream, &cmdLine);
+		 for (s = readInput(batch_stream, &cmdLine);
 		 (s != INPUT_READ_EOF) && (s != INPUT_READ_ERROR);
 		 s = readInput(batch_stream, &cmdLine)) {
 
@@ -117,6 +127,9 @@ void run(void)
 
 		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
 			run_cmd(cmdLine);
+
+
+			// if built in command, execute command
 		}
 	}
 }
