@@ -6,6 +6,8 @@
 #include "print.h"
 #include "readline.h"
 
+char *redir_file;
+
 //check if input string is more than 512 characters
 static inline int overflow(char * str)
 {
@@ -55,4 +57,41 @@ char **parseInput(char *cmdLine)
 	}
 		tokenList[i] = NULL;
 	return tokenList;
+}
+
+REDIR_PARSE_STATUS check_redirection(char *cmdLine)
+{
+	char *token = strtok(cmdLine, ">");
+    char *last;
+    char *file = NULL;
+	int i = 0;
+	redir_file = NULL;
+	while (token != NULL) {
+		i++;
+        last = token;
+		token = strtok(NULL, ">");
+
+	}
+	if (i == 1) {
+		return REDIR_OK_NOREDIR;
+	}
+	// More than 1 '>', return error
+	if (i > 2) {
+		return REDIR_ERROR;
+    } else {
+        file = strtok(last, " \r\t\n");
+		i = 0;
+        while (file != NULL) {
+            i++;
+			last = file;
+            file = strtok(NULL, " \r\t\n");
+        }
+		// more than 1 files, return error
+        if (i > 1) {
+            return REDIR_ERROR;
+        }
+    }
+
+	redir_file = strdup(last);
+	return REDIR_OK_REDIR;
 }
