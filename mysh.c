@@ -11,7 +11,7 @@
 #include "builtin.h"
 
 
-void do_execute(char **shArgs)
+void do_execute(char **shArgs, int do_redir, char *file)
 {
 	int childPid;
 
@@ -24,6 +24,12 @@ void do_execute(char **shArgs)
 
 	childPid = fork();
 	if (childPid == 0) {
+
+		if (do_redir) {
+			close(STDOUT_FILENO);
+			open(file, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+			free(file);
+		}
 		execvp(shArgs[0], shArgs);
 
 		printError();
@@ -32,6 +38,9 @@ void do_execute(char **shArgs)
 		exit(1);
 	}
 	else if (childPid > 0) {
+		if (do_redir) {
+			free(file);
+		}
 		waitpid(childPid, NULL, 0);
 	}
 }
@@ -41,6 +50,7 @@ int process_file(char *batch_file)
 	FILE * batch_stream;
 	char *cmdLine;
 	READ_STATUS s;
+	int redirect_status;
 
 	batch_stream = fopen(batch_file, "r");
 
@@ -59,6 +69,12 @@ int process_file(char *batch_file)
 			continue;
 		}
 
+		redirect_status = check_redirection(cmdLine);
+		if (redirect_status == REDIR_ERROR) {
+			printError();
+			free(cmdLine);
+			continue;
+		}
 		// parse input to get command
 		char **shArgv = parseInput(cmdLine);
 
@@ -71,10 +87,11 @@ int process_file(char *batch_file)
 			if(do_builtin(shArgv)) {
 				continue;
 			} else {
-				do_execute(shArgv);
+				do_execute(shArgv,
+							redirect_status == REDIR_OK_REDIR ?
+							1 : 0, redir_file);
 			}
 		}
-
 		free(cmdLine);
 		free(shArgv);
 	}
@@ -86,6 +103,7 @@ void run(void)
 {
 	READ_STATUS s;
 	char *cmdLine;
+	int redirect_status;
 
 	while (1) {
 
@@ -96,6 +114,14 @@ void run(void)
 		s = readInput(stdin, &cmdLine);
 
 		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
+
+			redirect_status = check_redirection(cmdLine);
+			if (redirect_status == REDIR_ERROR) {
+				printError();
+				free(cmdLine);
+				continue;
+			}
+
 			// parse input to get command
 			char **shArgv = parseInput(cmdLine);
 			// record command for history
@@ -105,7 +131,10 @@ void run(void)
 				if(do_builtin(shArgv)) {
 					continue;
 				} else {
-					do_execute(shArgv);
+					// else system call
+					do_execute(shArgv,
+								redirect_status == REDIR_OK_REDIR ?
+								1 : 0, redir_file);
 				}
 			}
 			free(cmdLine);
