@@ -75,14 +75,26 @@ void run_cmd(char *cmdLine, int mode)
 		display_full_command(histCmd);
 	}
 
-	if (is_builtin(shArgv) != -1 && redirect_status == REDIR_OK_REDIR) {
+	int builtin = is_builtin(shArgv);
+	if (builtin != -1 && redirect_status == REDIR_OK_REDIR) {
 		printError();
 		free(cmdLine);
 		free(shArgv);
 		return;
 	}
 
-	//TODO: add only for valid cases
+	if(builtin == 2) {
+		int isValid = check_re_exec(shArgv);
+		if(isValid) {
+			histCmd = strdup(re_exec_cmd);
+			shArgv = parseInput(re_exec_cmd);
+		} else {
+			printError();
+			free(cmdLine);
+			free(shArgv);
+			return;
+		}
+	}
 	add_cmd(histCmd);
 
 	if(shArgv[0] != NULL) {

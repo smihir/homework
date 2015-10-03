@@ -4,6 +4,7 @@
 #include "history.h"
 
 char builtins[][10] = {"exit", "history", "!"};
+char *re_exec_cmd;
 
 void call_exit(char **shArgs)
 {
@@ -52,3 +53,18 @@ int do_builtin(char** shArgs)
 	}
 	return isBuiltIn;
 }
+
+int check_re_exec(char **shArgs)
+{
+	int isValid = 0;
+	if(shArgs[1] == NULL) {
+		if(strcmp("!", shArgs[0]) == 0) {
+			isValid = 1;
+			re_exec_cmd = strdup(get_last_cmd());
+		}
+	} else if(shArgs[2] == NULL) {
+	
+	}
+	return isValid;
+}
+

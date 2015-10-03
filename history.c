@@ -41,7 +41,14 @@ char *get_nth_cmd(int n)
         return cmd;
 }
 
-
+char *get_last_cmd()
+{
+	char *cmd = NULL;
+	if(list.counter > 0) {
+		cmd = list.cmd_list[list.tail].cmd;
+	}
+	return cmd;
+}
 void display_all_cmd()
 {
     int i;
