@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include "print.h"
 #include "history.h"
 
@@ -34,7 +33,7 @@ int is_builtin(char** shArgs)
         return -1;
 
     for (i = 0; i < sizeof(builtins)/sizeof(builtins[0]); i++) {
-        if (strncmp(shArgs[0], builtins[i], strlen(builtins[i])) == 0) {
+        if (strncmp(shArgs[0], builtins[i], sizeof(builtins[i])) == 0) {
             return i;
         }
     }
@@ -58,50 +57,13 @@ int do_builtin(char** shArgs)
 int check_re_exec(char **shArgs)
 {
 	int isValid = 0;
-    char *cmd = NULL;
-
 	if(shArgs[1] == NULL) {
 		if(strcmp("!", shArgs[0]) == 0) {
 			isValid = 1;
-            cmd = get_last_cmd();
-            if (cmd != NULL) {
-			    re_exec_cmd = strdup(cmd);
-            } else {
-                isValid = 0;
-            }
-		} else if (strncmp("!", shArgs[0], 1) == 0) {
-            long num;
-            char *end;
-            num = strtol(shArgs[0] + 1, &end, 10);
-
-            if (num == 0 || *end != '\0') {
-                return 0;
-            } else {
-                cmd = get_nth_cmd(num);
-                if (cmd != NULL) {
-			        re_exec_cmd = strdup(cmd);
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
-        }
+			re_exec_cmd = strdup(get_last_cmd());
+		}
 	} else if(shArgs[2] == NULL) {
-            long num;
-            char *end;
-            num = strtol(shArgs[1], &end, 10);
-
-            if (num == 0 || *end != '\0') {
-                return 0;
-            } else {
-                cmd = get_nth_cmd(num);
-                if (cmd != NULL) {
-			        re_exec_cmd = strdup(cmd);
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
+	
 	}
 	return isValid;
 }

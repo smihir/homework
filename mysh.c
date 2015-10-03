@@ -57,7 +57,6 @@ void run_cmd(char *cmdLine, int mode)
 
 	histCmd = strdup(cmdLine);
 
-start:
 	redirect_status = check_redirection(cmdLine);
 	if (redirect_status == REDIR_ERROR) {
 
@@ -88,20 +87,12 @@ start:
 	if(builtin == 2) {
 		int isValid = check_re_exec(shArgv);
 		if(isValid) {
-			free(histCmd);
-			free(shArgv);
-			free(cmdLine);
-
 			histCmd = strdup(re_exec_cmd);
-			cmdLine = strdup(re_exec_cmd);
-			free(re_exec_cmd);
-
-			goto start;
+			shArgv = parseInput(re_exec_cmd);
 		} else {
 			printError();
 			free(cmdLine);
 			free(shArgv);
-			free(histCmd);
 			return;
 		}
 	}
