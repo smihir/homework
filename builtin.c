@@ -27,6 +27,10 @@ void call_history(char **shArgs)
 int is_builtin(char** shArgs)
 {
     int i;
+
+    if (shArgs[0] == NULL)
+        return -1;
+
     for (i = 0; i < sizeof(builtins)/sizeof(builtins[0]); i++) {
         if (strncmp(shArgs[0], builtins[i], sizeof(builtins[i])) == 0) {
             return i;

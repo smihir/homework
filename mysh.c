@@ -97,8 +97,7 @@ int process_file(char *batch_file)
 		return errno;
 	}
 
-	//while (cmdLine != NULL && strlen(cmdLine) > 1) {
-		 for (s = readInput(batch_stream, &cmdLine);
+	for (s = readInput(batch_stream, &cmdLine);
 		 (s != INPUT_READ_EOF) && (s != INPUT_READ_ERROR);
 		 s = readInput(batch_stream, &cmdLine)) {
 
@@ -127,9 +126,6 @@ void run(void)
 
 		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
 			run_cmd(cmdLine);
-
-
-			// if built in command, execute command
 		}
 	}
 }
