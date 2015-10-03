@@ -61,7 +61,7 @@ void run_cmd(char *cmdLine, int mode)
 	if (redirect_status == REDIR_ERROR) {
 
 		if (mode == BATCH_MODE) {
-			display_full_command(cmdLine);
+			display_full_command(histCmd);
 		}
 
 		printError();
