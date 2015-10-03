@@ -11,6 +11,10 @@
 #include "builtin.h"
 #include "history.h"
 
+enum mysh_modes {
+	INTERACTIVE_MODE = 0,
+	BATCH_MODE = 1,
+};
 void do_execute(char **shArgs, int do_redir, char *file)
 {
 	int childPid;
@@ -45,11 +49,20 @@ void do_execute(char **shArgs, int do_redir, char *file)
 	}
 }
 
-void run_cmd(char *cmdLine)
+void run_cmd(char *cmdLine, int mode)
 {
-	char *histCmd = strdup(cmdLine);
-	int redirect_status = check_redirection(cmdLine);
+	char *histCmd;
+	int redirect_status;
+
+	histCmd = strdup(cmdLine);
+
+	redirect_status = check_redirection(cmdLine);
 	if (redirect_status == REDIR_ERROR) {
+
+		if (mode == BATCH_MODE) {
+			display_full_command(cmdLine);
+		}
+
 		printError();
 		free(cmdLine);
 		free(histCmd);
@@ -57,6 +70,11 @@ void run_cmd(char *cmdLine)
 	}
 
 	char **shArgv = parseInput(cmdLine);
+
+	if (mode == BATCH_MODE && shArgv[0] != NULL) {
+		display_full_command(histCmd);
+	}
+
 	if (is_builtin(shArgv) != -1 && redirect_status == REDIR_OK_REDIR) {
 		printError();
 		free(cmdLine);
@@ -102,10 +120,11 @@ int process_file(char *batch_file)
 		 s = readInput(batch_stream, &cmdLine)) {
 
 		if (s == INPUT_READ_OVERFLOW) {
+			write(STDOUT_FILENO, cmdLine, strlen(cmdLine));
 			free(cmdLine);
 			continue;
 		}
-		run_cmd(cmdLine);
+		run_cmd(cmdLine, BATCH_MODE);
 	}
 	fclose(batch_stream);
 	return 0;
@@ -125,7 +144,7 @@ void run(void)
 		s = readInput(stdin, &cmdLine);
 
 		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
-			run_cmd(cmdLine);
+			run_cmd(cmdLine, INTERACTIVE_MODE);
 		}
 	}
 }

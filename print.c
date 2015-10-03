@@ -17,6 +17,14 @@ void printError(void)
 	write(STDERR_FILENO, error_message, strlen(error_message));
 }
 
+void display_full_command(char *command)
+{
+	char *cmdLine = malloc(MAX_LENGTH * sizeof(char));
+	sprintf(cmdLine, "%s",command);
+	write(STDOUT_FILENO, cmdLine, strlen(cmdLine));
+	free(cmdLine);
+}
+
 void display_command(char **command)
 {
 	char * token = NULL;
