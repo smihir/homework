@@ -96,9 +96,11 @@ void run_cmd(char *cmdLine, int mode)
 			return;
 		}
 	}
-	add_cmd(histCmd);
 
 	if(shArgv[0] != NULL) {
+
+		add_cmd(histCmd);
+
 		if(do_builtin(shArgv)) {
 			free(histCmd);
 			free(cmdLine);
