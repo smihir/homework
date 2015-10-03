@@ -20,7 +20,7 @@ void add_cmd(char *cmd)
 	strcpy(list.cmd_list[list.tail].cmd, cmd);
 	list.counter++;
 	list.cmd_list[list.tail].num = list.counter;
-	if(list.counter >= MAX_CMD_SIZE) {
+	if(list.counter > MAX_CMD_SIZE) {
 		list.head++;
 		list.head = list.head % MAX_CMD_SIZE;
 	}
@@ -28,17 +28,17 @@ void add_cmd(char *cmd)
 
 char *get_nth_cmd(int n)
 {
-        char *cmd = NULL;
-        int i;
-	int max = list.counter < MAX_CMD_SIZE ? list.counter : MAX_CMD_SIZE; 	
-        for(i = 0; i < max; i++) {
-                ll_node node = list.cmd_list[i];
-                if(node.num == n) {
-                        cmd = node.cmd;
-                        break;
-                }
+    char *cmd = NULL;
+    int i;
+    int max = list.counter < MAX_CMD_SIZE ? list.counter : MAX_CMD_SIZE;
+    for(i = 0; i < max; i++) {
+        ll_node node = list.cmd_list[i];
+        if(node.num == n) {
+                cmd = node.cmd;
+                break;
         }
-        return cmd;
+    }
+    return cmd;
 }
 
 char *get_last_cmd()
@@ -65,6 +65,6 @@ void display_all_cmd()
             printf("%d %s", list.cmd_list[i].num, list.cmd_list[i].cmd);
         }
     } else {
-        printf("Error in history! head=tail \n");
+        printf("%d %s", list.cmd_list[list.head].num, list.cmd_list[list.head].cmd);
     }
 }

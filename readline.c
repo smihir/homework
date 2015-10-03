@@ -27,9 +27,7 @@ READ_STATUS readInput(FILE * input, char **cmdLine)
 	if (overflow(*cmdLine)) {
 		printError();
 
-		do {
-			fgets(*cmdLine, MAX_LENGTH, input);
-		} while(overflow(*cmdLine));
+		(*cmdLine)[MAX_LENGTH - 2] = '\n';
 
 		return INPUT_READ_OVERFLOW;
 	}
@@ -61,11 +59,17 @@ char **parseInput(char *cmdLine)
 
 REDIR_PARSE_STATUS check_redirection(char *cmdLine)
 {
-	char *token = strtok(cmdLine, ">");
+	char *token;
     char *last;
     char *file = NULL;
 	int i = 0;
 	redir_file = NULL;
+
+	if (cmdLine == NULL) {
+		return REDIR_ERROR;
+	}
+
+	token = strtok(cmdLine, ">");
 	while (token != NULL) {
 		i++;
         last = token;
@@ -74,6 +78,8 @@ REDIR_PARSE_STATUS check_redirection(char *cmdLine)
 	}
 	if (i == 1) {
 		return REDIR_OK_NOREDIR;
+	} else if (i == 0) {
+		return REDIR_ERROR;
 	}
 	// More than 1 '>', return error
 	if (i > 2) {

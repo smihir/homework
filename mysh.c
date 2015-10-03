@@ -15,6 +15,7 @@ enum mysh_modes {
 	INTERACTIVE_MODE = 0,
 	BATCH_MODE = 1,
 };
+
 void do_execute(char **shArgs, int do_redir, char *file)
 {
 	int childPid;
@@ -124,7 +125,7 @@ int process_file(char *batch_file)
 
 	if (batch_stream == NULL) {
 		printError();
-		return errno;
+		return 1;
 	}
 
 	for (s = readInput(batch_stream, &cmdLine);
@@ -132,7 +133,7 @@ int process_file(char *batch_file)
 		 s = readInput(batch_stream, &cmdLine)) {
 
 		if (s == INPUT_READ_OVERFLOW) {
-			write(STDOUT_FILENO, cmdLine, strlen(cmdLine));
+			display_full_command(cmdLine);
 			free(cmdLine);
 			continue;
 		}
@@ -155,7 +156,12 @@ void run(void)
 		// read input from command line
 		s = readInput(stdin, &cmdLine);
 
-		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
+		if (s == INPUT_READ_EOF) {
+			free(cmdLine);
+			exit(0);
+		}
+
+		if (s == INPUT_READ_OK) {
 			run_cmd(cmdLine, INTERACTIVE_MODE);
 		}
 	}
