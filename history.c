@@ -32,10 +32,9 @@ char *get_nth_cmd(int n)
     int i;
     int max = list.counter < MAX_CMD_SIZE ? list.counter : MAX_CMD_SIZE;
     for(i = 0; i < max; i++) {
-        ll_node node = list.cmd_list[i];
-        if(node.num == n) {
-                cmd = node.cmd;
-                break;
+        if(list.cmd_list[i].num == n) {
+            cmd = list.cmd_list[i].cmd;
+            break;
         }
     }
     return cmd;
