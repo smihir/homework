@@ -15,6 +15,7 @@ enum mysh_modes {
 	INTERACTIVE_MODE = 0,
 	BATCH_MODE = 1,
 };
+
 void do_execute(char **shArgs, int do_redir, char *file)
 {
 	int childPid;
