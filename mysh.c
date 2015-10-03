@@ -144,7 +144,12 @@ void run(void)
 		// read input from command line
 		s = readInput(stdin, &cmdLine);
 
-		if (s == INPUT_READ_OK || s == INPUT_READ_EOF) {
+		if (s == INPUT_READ_EOF) {
+			free(cmdLine);
+			exit(0);
+		}
+
+		if (s == INPUT_READ_OK) {
 			run_cmd(cmdLine, INTERACTIVE_MODE);
 		}
 	}
