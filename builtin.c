@@ -33,7 +33,7 @@ int is_builtin(char** shArgs)
         return -1;
 
     for (i = 0; i < sizeof(builtins)/sizeof(builtins[0]); i++) {
-        if (strncmp(shArgs[0], builtins[i], strlen(builtins[i])) == 0) {
+        if (strncmp(shArgs[0], builtins[i], sizeof(builtins[i])) == 0) {
             return i;
         }
     }
@@ -54,42 +54,16 @@ int do_builtin(char** shArgs)
 	return isBuiltIn;
 }
 
-int check_arg(char *arg)
-{
-	int isValid = 0;
-	char *endPtr;
-	long num = strtoul(arg, &endPtr, 0);
-	if(*endPtr == '\0') {
-		char *cmd = get_nth_cmd(num);
-		if( cmd != NULL) {
-			isValid = 1;
-			re_exec_cmd = strdup(cmd);
-		}
-	}
-	return isValid;
-}
-
 int check_re_exec(char **shArgs)
 {
 	int isValid = 0;
 	if(shArgs[1] == NULL) {
 		if(strcmp("!", shArgs[0]) == 0) {
-			char *cmd = get_last_cmd();
-			if(cmd != NULL) {
-				isValid = 1;
-				re_exec_cmd = strdup(cmd);
-			}
-		} else {
-			int len = strlen(shArgs[0]);
-			char arg[len];
-			strncpy(arg, shArgs[0] + 1, len -1);
-			arg[len - 1] = '\0';
-			isValid = check_arg(arg);
+			isValid = 1;
+			re_exec_cmd = strdup(get_last_cmd());
 		}
 	} else if(shArgs[2] == NULL) {
-		if(strcmp("!", shArgs[0]) == 0) {
-			isValid = check_arg(shArgs[1]);
-		}
+	
 	}
 	return isValid;
 }
