@@ -29,11 +29,16 @@ void do_execute(char **shArgs, int do_redir, char *file)
 
 	childPid = fork();
 	if (childPid == 0) {
+		int fd;
 
 		if (do_redir) {
 			close(STDOUT_FILENO);
-			open(file, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+			fd = open(file, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 			free(file);
+			if (fd == -1) {
+				printError();
+				exit(1);
+			}
 		}
 		execvp(shArgs[0], shArgs);
 
