@@ -27,9 +27,7 @@ READ_STATUS readInput(FILE * input, char **cmdLine)
 	if (overflow(*cmdLine)) {
 		printError();
 
-		do {
-			fgets(*cmdLine, MAX_LENGTH, input);
-		} while(overflow(*cmdLine));
+		(*cmdLine)[MAX_LENGTH - 2] = '\n';
 
 		return INPUT_READ_OVERFLOW;
 	}

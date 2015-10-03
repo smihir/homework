@@ -120,7 +120,7 @@ int process_file(char *batch_file)
 		 s = readInput(batch_stream, &cmdLine)) {
 
 		if (s == INPUT_READ_OVERFLOW) {
-			write(STDOUT_FILENO, cmdLine, strlen(cmdLine));
+			display_full_command(cmdLine);
 			free(cmdLine);
 			continue;
 		}
