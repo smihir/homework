@@ -54,6 +54,7 @@ void run_cmd(char *cmdLine, int mode)
 {
 	char *histCmd;
 	int redirect_status;
+	int loopback = 0;
 
 start:
 	histCmd = strdup(cmdLine);
@@ -73,7 +74,7 @@ start:
 
 	char **shArgv = parseInput(cmdLine);
 
-	if (mode == BATCH_MODE && shArgv[0] != NULL) {
+	if (mode == BATCH_MODE && shArgv[0] != NULL && loopback == 0) {
 		display_full_command(histCmd);
 	}
 
@@ -96,6 +97,8 @@ start:
 			cmdLine = strdup(re_exec_cmd);
 
 			free(re_exec_cmd);
+
+			loopback = 1;
 			goto start;
 		} else {
 			printError();
