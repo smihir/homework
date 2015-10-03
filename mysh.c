@@ -112,7 +112,7 @@ int process_file(char *batch_file)
 
 	if (batch_stream == NULL) {
 		printError();
-		return errno;
+		return 1;
 	}
 
 	for (s = readInput(batch_stream, &cmdLine);
