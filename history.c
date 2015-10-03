@@ -58,6 +58,6 @@ void display_all_cmd()
             printf("%d %s", list.cmd_list[i].num, list.cmd_list[i].cmd);
         }
     } else {
-        printf("Error in history! head=tail \n");
+        printf("%d %s", list.cmd_list[list.head].num, list.cmd_list[list.head].cmd);
     }
 }
