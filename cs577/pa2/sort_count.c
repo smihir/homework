@@ -5,10 +5,10 @@
 #include <unistd.h>
 
 
-int merge(int *array, int l_index, int r_index, int l_end_index);
+inline int merge(int *array, int l_index, int r_index, int l_end_index);
 
 #define gc getchar_unlocked
-int read_int()
+inline int read_int()
 {
     int ret = 0;
     char c = gc();
@@ -20,29 +20,14 @@ int read_int()
     return ret;
 }
 
-void print_array(char *s, int * array, int size)
-{
-    int i;
-    printf("%s\n", s);
-    printf("==============\n");
-    for (i = 0; i < size; i++) {
-        printf("%d ", array[i]);
-            if ((i + 1) % 16 == 0)
-                printf("\n");
-    }
-    printf("\n");
-    printf("==============\n");
-
-}
-
 int merge_sort(int *array, int l_index, int r_index)
 {
     int mid, c1, c2 ,c3;
 
-    if (l_index >= r_index)
+    if (__builtin_expect(l_index >= r_index, 0))
         return 0;
 
-    mid = l_index + ((r_index - l_index)/2);
+    mid = l_index + ((r_index - l_index) >> 1);
     
     c1 = merge_sort(array, l_index, mid);
     c2 = merge_sort(array, mid + 1, r_index);
@@ -61,7 +46,7 @@ inline int merge(int *array, int l_index, int r_index, int l_end_index)
 
     r_copy = array + l_index + l_size;
 
-    memcpy(l_copy, array + l_index, (l_size)*sizeof(int));
+    memcpy(l_copy, array + l_index, (l_size)<<2);
 
     for (i = 0; i < (l_size + r_size); i++) {
         if (l_copy[j] <= r_copy[k]) {
@@ -73,7 +58,8 @@ inline int merge(int *array, int l_index, int r_index, int l_end_index)
             array[l_index + i] = r_copy[k++];
             inv += (l_size - j);
             if (k == r_size) {
-                memcpy(array + l_index + i + 1, l_copy + j, (l_size - j)*sizeof(int));
+                memcpy(array + l_index + i + 1, l_copy + j,
+                       (l_size - j)<<2);
                 return inv;
             }
         }
@@ -85,10 +71,7 @@ int main(int argc, char **argv)
 {
     int nruns, size, i;
     int inarray[100001];
-    char buf[100];
-    int offset = 0;
-    int inv;
-   
+
     nruns = read_int();
 
     while (nruns >= 1) {
@@ -96,11 +79,8 @@ int main(int argc, char **argv)
         for (i = 0; i < size; i++)
             inarray[i] = read_int();
 
-        inv = merge_sort(inarray, 0, size - 1);
+        printf("%d\n", merge_sort(inarray, 0, size - 1));
 
-        offset += sprintf(buf + offset, "%d\n", inv);
-        
         nruns--;
     }
-    write(1, buf, offset);
 }
